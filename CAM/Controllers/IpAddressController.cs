@@ -1,19 +1,25 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using System.Web.Mvc;
+﻿using System.Web.Mvc;
+using CAM.Core.Repositories;
+using CAM.Models;
 
 namespace CAM.Controllers
 {
-    public class IpAddressController : Controller
+    public class IpAddressController : ApplicationController
     {
+        private readonly IRepositoryFactory _repositoryFactory;
+
+        public IpAddressController(IRepositoryFactory repositoryFactory)
+        {
+            _repositoryFactory = repositoryFactory;
+        }
+
         //
         // GET: /IpAddress/
 
         public ActionResult Index()
         {
-            return View();
+            var viewModel = IpAddressViewModel.Create(_repositoryFactory);
+            return View(viewModel);
         }
 
         //

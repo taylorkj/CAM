@@ -10,7 +10,7 @@ using System.Web.Routing;
 
 namespace CAM
 {
-    // Note: For instructions on enabling IIS6 or IIS7 classic mode, 
+    // Note: For instructions on enabling IIS6 or IIS7 classic mode,
     // visit http://go.microsoft.com/?LinkId=9394801
 
     public class MvcApplication : System.Web.HttpApplication
@@ -23,7 +23,6 @@ namespace CAM
         public static void RegisterRoutes(RouteCollection routes)
         {
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
-
             routes.MapRoute(
                 name: "request",
                 url: "{site}/request/{id}",
@@ -33,7 +32,7 @@ namespace CAM
             routes.MapRoute(
                 name: "sitebase",
                 url: "{site}/{controller}/{action}/{id}",
-                defaults: new {site = "none", controller = "Home", action = "Index", id = UrlParameter.Optional}
+                defaults: new { site = "none", controller = "Home", action = "Index", id = UrlParameter.Optional }
                 );
 
             //routes.MapHttpRoute(
@@ -42,11 +41,11 @@ namespace CAM
             //    defaults: new { id = RouteParameter.Optional }
             //);
 
-            //routes.MapRoute(
-            //    name: "Default",
-            //    url: "{controller}/{action}/{id}",
-            //    defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional }
-            //);
+            routes.MapRoute(
+                name: "Default",
+                url: "{controller}/{action}/{id}",
+                defaults: new { controller = "Home", action = "Index", id = UrlParameter.Optional }
+            );
         }
 
         protected void Application_Start()

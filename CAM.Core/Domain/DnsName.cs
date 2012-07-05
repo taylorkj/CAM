@@ -9,6 +9,7 @@ namespace CAM.Core.Domain
         [StringLength(100)]
         [Required]
         public virtual string Name { get; set; }
+
         [Required]
         public virtual IpAddress IpAddress { get; set; }
     }
@@ -17,10 +18,10 @@ namespace CAM.Core.Domain
     {
         public DnsNameMap()
         {
-            Id(x => x.Id);
+            Id(x => x.Id).GeneratedBy.Identity();
 
             Map(x => x.Name);
-            References(x => x.IpAddress);
+            References(x => x.IpAddress).Column("IpAddress").ForeignKey("Id");
         }
     }
 }

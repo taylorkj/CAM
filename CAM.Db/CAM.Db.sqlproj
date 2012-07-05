@@ -58,6 +58,7 @@
     <Folder Include="dbo\Tables\" />
     <Folder Include="Publish" />
     <Folder Include="Data" />
+    <Folder Include="dbo\Views" />
   </ItemGroup>
   <ItemGroup>
     <Build Include="dbo\Tables\Sites.sql" />
@@ -72,9 +73,11 @@
     <Build Include="dbo\Tables\IpAddresses.sql" />
     <Build Include="dbo\Tables\DnsNames.sql" />
     <Build Include="dbo\Tables\RequestTemplatesXAvailableSoftware.sql" />
+    <Build Include="dbo\Views\IpAddressRanges_v.sql" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Publish\SqlExpress.publish.xml" />
+    <None Include="Data\Insert into IpAddresses.sql" />
   </ItemGroup>
   <ItemGroup>
     <RefactorLog Include="CAM.Db.refactorlog" />

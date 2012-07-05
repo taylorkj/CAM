@@ -1,0 +1,60 @@
+﻿@using CAM.Core.Domain
+@model IpAddressViewModel
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>IP Addresses</h2>
+<div class="tabbable">
+    <!-- Only required for left/right tabs -->
+    <ul class="nav nav-tabs">
+        @{
+            var i = 1;
+            foreach (var r in Model.IpAddressRanges.OrderBy(r => r.TabOrder))
+            {
+                var tabString = "#tab" + i;
+                var activeString = "active";
+            <li @(r.TabOrder == 1 ? "class=" + @activeString : "") ><a href="@tabString" data-toggle="tab">@r.Id</a>
+            </li>
+                i++;
+            }}
+    </ul>
+    <div class="tab-content">
+        @{
+            i = 1;
+            foreach (var r in Model.IpAddressRanges.OrderBy(r => r.TabOrder))
+            {
+                var tabIdString = "tab" + i;
+                var tabPaneClass = (r.TabOrder == 1 ? "tab-pane active" : "tab-pane");
+            <div class="@tabPaneClass" id="@tabIdString">
+                <table class="table table-striped">
+                    <tr>
+                        <th>IP Address</th>
+                        <th>Host</th>
+                        <th>DNS Name(s)</th>
+                    </tr>
+                    @foreach (var ip in r.IpAddresses)
+                    {
+                        <tr>
+                            <td>@ip.Id</td>
+                            <td>@ip.Host</td>
+                            <td>
+                                <ul class="unstyled">
+                                    @foreach (var dns in ip.DnsNames)
+                                    {
+                                        <li>
+                                            @dns.Name
+                                        </li>
+                                    }
+                                </ul>
+                            </td>
+                        </tr>
+                    }
+                </table>
+
+            </div>
+                    i++;
+            }
+        }
+    </div>
+</div>

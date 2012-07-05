@@ -14,6 +14,7 @@ namespace CAM.Core.Domain
 
         [StringLength(100)]
         public virtual string Host { get; set; }
+
         public virtual IList<DnsName> DnsNames { get; set; }
 
         [StringLength(9)]
@@ -31,7 +32,7 @@ namespace CAM.Core.Domain
             Id(x => x.Id);
 
             Map(x => x.Host);
-            HasMany(x => x.DnsNames).Cascade.AllDeleteOrphan().Inverse();
+            HasMany(x => x.DnsNames).KeyColumn("IpAddress").Cascade.AllDeleteOrphan().Inverse();
         }
     }
 }
