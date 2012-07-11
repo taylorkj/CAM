@@ -27,8 +27,8 @@ namespace CAM
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
             routes.MapHttpRoute(
                 name: "DefaultApi",
-                routeTemplate: "api/{controller}/{id}",
-                defaults: new { id = RouteParameter.Optional }
+                routeTemplate: "{site}/api/{controller}/{id}",
+                defaults: new { site = "none", id = RouteParameter.Optional }
             );
 
             routes.MapRoute(
