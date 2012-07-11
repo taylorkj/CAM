@@ -7,6 +7,8 @@ using System.Web.Http;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
+using UCDArch.Core;
+using UCDArch.Core.PersistanceSupport;
 
 namespace CAM
 {
@@ -23,6 +25,12 @@ namespace CAM
         public static void RegisterRoutes(RouteCollection routes)
         {
             routes.IgnoreRoute("{resource}.axd/{*pathInfo}");
+            routes.MapHttpRoute(
+                name: "DefaultApi",
+                routeTemplate: "api/{controller}/{id}",
+                defaults: new { id = RouteParameter.Optional }
+            );
+
             routes.MapRoute(
                 name: "request",
                 url: "{site}/request/{id}",
@@ -34,12 +42,6 @@ namespace CAM
                 url: "{site}/{controller}/{action}/{id}",
                 defaults: new { site = "none", controller = "Home", action = "Index", id = UrlParameter.Optional }
                 );
-
-            //routes.MapHttpRoute(
-            //    name: "DefaultApi",
-            //    routeTemplate: "api/{controller}/{id}",
-            //    defaults: new { id = RouteParameter.Optional }
-            //);
 
             routes.MapRoute(
                 name: "Default",

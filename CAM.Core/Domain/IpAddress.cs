@@ -17,7 +17,7 @@ namespace CAM.Core.Domain
 
         public virtual IList<DnsName> DnsNames { get; set; }
 
-        [StringLength(9)]
+        [StringLength(11)]
         [Required]
         public virtual string RangeId { get; set; }
 
@@ -29,9 +29,11 @@ namespace CAM.Core.Domain
         public IpAddressMap()
         {
             Table("IpAddresses");
-            Id(x => x.Id);
+            Id(x => x.Id).GeneratedBy.Assigned();
 
             Map(x => x.Host);
+            Map(x => x.RangeId);
+            Map(x => x.SortOrder);
             HasMany(x => x.DnsNames).KeyColumn("IpAddress").Cascade.AllDeleteOrphan().Inverse();
         }
     }

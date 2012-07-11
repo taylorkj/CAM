@@ -3,8 +3,54 @@
 @{
     ViewBag.Title = "Index";
 }
+@section AdditionalScripts
+{
+    <script type="text/javascript" language="javascript">
+        (function () {
+            $('.editHostName').live('change', function () {
+                var txtHostName = escape($(this).val());
+                var id = $.trim($(this).data('id'));
+
+                var IpAddressViewModel = {
+                    Id: $.trim($(this).data('id')),
+                    Host: $.trim($(this).val())
+                }
+
+                $.ajax({
+                    //url: "../../api/ipaddresses/?id=" + id + "&host=" + txtHostName,
+                    url: "../../api/ipaddressapi/",
+                    data: JSON.stringify(IpAddressViewModel),
+                    type: "PUT",
+                    contentType: "application/json;charset=utf-8",
+                    statusCode: {
+
+                        //Web API Post method returns status code as 201
+                        201: function () {
+                            alert("New record added successfully");
+                        },
+                        //Web API Put method returns status code as 200
+                        200: function () {
+                            //var message = $("#message")[0];
+
+                            //$(message).html("Record updated successfully");
+                            alert("Record updated successfully");
+                        }
+                    }
+                });
+            });
+
+            function contentLoaded() {
+                // Add all the button related event listeners:
+
+            };
+            window.addEventListener("DOMContentLoaded", contentLoaded, false);
+
+        })();
+    </script>
+}
 
 <h2>IP Addresses</h2>
+<div id="message" style="color: red;"></div>
 <div class="tabbable">
     <!-- Only required for left/right tabs -->
     <ul class="nav nav-tabs">
@@ -37,7 +83,9 @@
                     {
                         <tr>
                             <td>@ip.Id</td>
-                            <td>@ip.Host</td>
+                            <td>
+                                <input type="text" value="@ip.Host" id="txtHostName" name="hostName" class="editHostName" data-id="@ip.Id" />
+                            </td>
                             <td>
                                 <ul class="unstyled">
                                     @foreach (var dns in ip.DnsNames)

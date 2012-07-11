@@ -25,7 +25,7 @@ namespace CAM.Core.Domain
             Id(x => x.Id);
 
             Map(x => x.TabOrder);
-            HasMany(x => x.IpAddresses).KeyColumn("RangeId").Cascade.AllDeleteOrphan().Inverse();
+            HasMany(x => x.IpAddresses).KeyColumn("RangeId").Cascade.AllDeleteOrphan().Inverse().OrderBy("SortOrder");
         }
     }
 }
