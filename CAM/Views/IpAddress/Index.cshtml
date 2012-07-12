@@ -7,7 +7,23 @@
 {
     <script type="text/javascript" language="javascript">
         (function () {
+
+            function renderButton(textElement, id) {
+                var button = document.createElement("input");
+                button.type = 'button';
+                button.className = 'findHostName btn-mini';
+                button.value = 'Reverse DNS';
+                button.id = 'btnFindHost';
+
+                $(button).attr('data-id', id);
+
+                textElement.parentElement.appendChild(button);
+            }
+
             $('.editHostName').live('change', function () {
+                var that = $(this)[0];
+                var other = $(this).siblings(":button")[0];
+
                 var txtHostName = escape($(this).val());
                 var id = $.trim($(this).data('id'));
 
@@ -30,13 +46,55 @@
                         },
                         //Web API Put method returns status code as 200
                         200: function () {
-                            //var message = $("#message")[0];
+                            if (txtHostName != null && txtHostName != "") {
+                                //debugger;
+                                $(other).remove();
 
-                            //$(message).html("Record updated successfully");
+                            }
                             alert("Record updated successfully");
+                        },
+                        204: function () {
+                            renderButton(that, id);
                         }
                     }
                 });
+            });
+
+            $('.findHostName').live('click', function () {
+                var that = $(this)[0];
+                var other = $(this).siblings(":text")[0];
+
+                var txtHostName = escape($(other).val());
+                var id = $.trim($(this).data('id'));
+
+                var IpAddressModel = {
+                    Id: id,
+                    Host: txtHostName,
+                    RangeId: "111.111.111",
+                    SortOrder: 0
+                }
+                // debugger;
+
+                if (txtHostName == "") {
+                    $.ajax({
+                        type: "GET",
+                        url: "../api/ipaddressapi/" + id,
+                        data: JSON.stringify(IpAddressModel),
+                        contentType: "application/json;charset=utf-8",
+                        dataType: "JSON",
+                        success: function (data) {
+                            var ip = data.Id;
+                            var host = data.Host;
+                            $(other).val(host);
+                            if (host != null && host != "") {
+                                //debugger;
+                                $(that).remove();
+                                $(other).trigger('change');
+                            }
+                        }
+                    });
+                }
+
             });
 
             function contentLoaded() {
@@ -51,6 +109,7 @@
 
 <h2>IP Addresses</h2>
 <div id="message" style="color: red;"></div>
+
 <div class="tabbable">
     <!-- Only required for left/right tabs -->
     <ul class="nav nav-tabs">
@@ -84,7 +143,8 @@
                         <tr>
                             <td>@ip.Id</td>
                             <td>
-                                <input type="text" value="@ip.Host" id="txtHostName" name="hostName" class="editHostName" data-id="@ip.Id" />
+                                <input type="text" value="@ip.Host" id="txtHostName" name="hostName" class="editHostName" data-id="@ip.Id" />@if (@ip.Host == null || @ip.Host == "")
+                                                                                                                                             { <input type="button" class="findHostName btn-mini" value="Reverse DNS" id="btnFindHost" data-id="@ip.Id" /> }
                             </td>
                             <td>
                                 <ul class="unstyled">

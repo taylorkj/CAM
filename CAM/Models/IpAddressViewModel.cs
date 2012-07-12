@@ -13,6 +13,8 @@ namespace CAM.Models
 
         public string Host { get; set; }
 
+        public IpAddress IpAddress { get; set; }
+
         #endregion WebAPI_variables
 
         // list values

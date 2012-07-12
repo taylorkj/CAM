@@ -176,6 +176,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\AccountModels.cs" />
+    <Compile Include="Models\IpAddressModel.cs" />
     <Compile Include="Models\IpAddressViewModel.cs" />
     <Compile Include="Models\HomeIndexViewModel.cs" />
     <Compile Include="Models\RequestViewModel.cs" />

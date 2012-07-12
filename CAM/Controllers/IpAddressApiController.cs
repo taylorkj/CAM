@@ -60,8 +60,61 @@ namespace CAM.Controllers
 
                     ts.CommitTransaction();
                 }
-                return new HttpResponseMessage(HttpStatusCode.OK);
+                if (String.IsNullOrEmpty(myIpAddress.Host))
+                {
+                    return new HttpResponseMessage(HttpStatusCode.NoContent);
+                }
+                else
+                {
+                    return new HttpResponseMessage(HttpStatusCode.OK);
+                }
             }
+        }
+
+        public IpAddressModel Get(string id)
+        {
+            var viewModel = new IpAddressModel();
+
+            if (!string.IsNullOrEmpty(id))
+            {
+                var ipAddress = _ipAddressRepository.GetNullableById(id);
+
+                if (ipAddress != null)
+                {
+                    if (string.IsNullOrEmpty(ipAddress.Host))
+                    {
+                        try
+                        {
+                            IPHostEntry objIpHostEntry = System.Net.Dns.GetHostEntry(id);
+
+                            var hostName = objIpHostEntry.HostName;
+                            if (!string.IsNullOrEmpty(hostName))
+                            {
+                                var firstIndexOfDot = hostName.IndexOf(".");
+                                if (firstIndexOfDot > 0)
+                                {
+                                    //var domainName = hostName.Substring(firstIndexOfDot + 1);
+                                    hostName = hostName.Substring(0, firstIndexOfDot);
+                                    //viewModel.Domain = domainName;
+                                }
+                            }
+
+                            ipAddress.Host = hostName;
+
+                            viewModel.Id = ipAddress.Id;
+                            viewModel.Host = ipAddress.Host;
+                            viewModel.RangeId = ipAddress.RangeId;
+                            viewModel.SortOrder = ipAddress.SortOrder;
+                        } // end try
+                        catch (Exception ex)
+                        {
+                            //viewModel.ExceptionMessage = ex.Message;
+                            // Do nothing
+                        }
+                    } // end  if (string.IsNullOrEmpty(ipAddress.Host))
+                }
+            }
+            return viewModel;
         }
     }
 }
