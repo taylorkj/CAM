@@ -14,5 +14,7 @@ namespace CAM.Models
         public virtual string RangeId { get; set; }
 
         public virtual int SortOrder { get; set; }
+
+        public string ExceptionMessage { get; set; }
     }
 }

@@ -108,8 +108,7 @@ namespace CAM.Controllers
                         } // end try
                         catch (Exception ex)
                         {
-                            //viewModel.ExceptionMessage = ex.Message;
-                            // Do nothing
+                            viewModel.ExceptionMessage = ex.Message;
                         }
                     } // end  if (string.IsNullOrEmpty(ipAddress.Host))
                 }
