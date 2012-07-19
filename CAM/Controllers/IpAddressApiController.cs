@@ -33,7 +33,7 @@ namespace CAM.Controllers
 
         // PUT api/ipaddreses/(json IpAddressViewModel data)
         // The json databinding automatically occurs because I added Id and Host to the IpAddressViewModel class.  It did not work when I tried using the IpAddress domain class.
-        public HttpResponseMessage Put(IpAddressViewModel ipAddress)
+        public HttpResponseMessage Post(IpAddressViewModel ipAddress)
         {
             var id = ipAddress.Id;
 

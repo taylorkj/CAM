@@ -6,7 +6,9 @@
 @section AdditionalScripts
 {
     <script src='@Url.Script("jquery.blockUI.js")' type="text/javascript"> </script>
-    <script type="text/javascript" language="javascript">
+    <script src='@Url.Script("bootstrap-transition.js")' type="text/javascript"> </script>
+    <script src='@Url.Script("bootstrap-modal.js")' type="text/javascript"> </script>
+    <script type="text/javascript">
         //$(document).ajaxStop($.unblockUI);
         (function () {
 
@@ -16,14 +18,13 @@
                 button.className = 'findHostName btn-mini';
                 button.value = 'Reverse DNS';
                 button.id = 'btnFindHost';
-
                 $(button).attr('data-id', id);
 
                 textElement.parentElement.appendChild(button);
-    }
+            }
 
             $('.editHostName').live('change', function () {
-           $.blockUI({ message: '<h2><image src="@Url.Image("wait30trans.gif")" alt="wait image" />&nbsp;Please Standby...</h2>' });
+                $.blockUI({ message: '<h2><image src="@Url.Image("wait30trans.gif")" alt="wait image" />&nbsp;Please Standby...</h2>' });
                 var that = $(this)[0];
                 var other = $(this).siblings(":button")[0];
 
@@ -31,110 +32,125 @@
                 var id = $.trim($(this).data('id'));
 
                 var IpAddressViewModel = {
-        Id: $.trim($(this).data('id')),
-        Host: $.trim($(this).val())
-    }
+                    Id: $.trim($(this).data('id')),
+                    Host: $.trim($(this).val())
+                }
 
                 $.ajax({
-        //url: "../../api/ipaddresses/?id=" + id + "&host=" + txtHostName,
-        url: "../api/ipaddressapi/",
-        data: JSON.stringify(IpAddressViewModel),
-        type: "PUT",
-        contentType: "application/json;charset=utf-8",
-        statusCode: {
+                    //url: "../../api/ipaddresses/?id=" + id + "&host=" + txtHostName,
+                    url: "../api/ipaddressapi/",
+                    data: JSON.stringify(IpAddressViewModel),
+                    type: "Post",
+                    contentType: "application/json;charset=utf-8",
+                    statusCode: {
 
-        //Web API Post method returns status code as 201
+                        //Web API Post method returns status code as 201
                         201: function () {
                             alert("New record added successfully");
-    },
-        //Web API Put method returns status code as 200
+                        },
+                        //Web API Put method returns status code as 200
                         200: function () {
 
                             if (txtHostName != null && txtHostName != "") {
                                 $.blockUI({ message: "<h2>Record updated successfully</h2>" });
-                                $.unblockUI({fadeOut: 2000});
+                                $.unblockUI({ fadeOut: 2000 });
                                 $(other).remove();
-    }
-
-    },
+                            }
+                        },
                         204: function () {
-        // record has been cleared and set to null.
+                            // record has been cleared and set to null.
                             renderButton(that, id);
                             $.blockUI({ message: "<h2>Record updated successfully</h2>" });
-                            $.unblockUI({fadeOut: 2000});
+                            $.unblockUI({ fadeOut: 2000 });
+                        }
+                    }
+                });
 
-    }
-    }
-    });
+            });
 
-    });
+            $('.findHostName').live('click', function () {
+                $.blockUI({ message: '<h2><image src="@Url.Image("wait30trans.gif")" alt="wait image" />&nbsp;Please Standby...</h2>' });
+                var that = $(this)[0];
+                var other = $(this).siblings(":text")[0];
 
-    $('.findHostName').live('click', function () {
-        $.blockUI({ message: '<h2><image src="@Url.Image("wait30trans.gif")" alt="wait image" />&nbsp;Please Standby...</h2>' });
-        var that = $(this)[0];
-        var other = $(this).siblings(":text")[0];
+                var txtHostName = escape($(other).val());
+                var id = $.trim($(this).data('id'));
 
-        var txtHostName = escape($(other).val());
-        var id = $.trim($(this).data('id'));
+                var IpAddressModel = {
+                    Id: id,
+                    Host: txtHostName,
+                    RangeId: "111.111.111",
+                    SortOrder: 0
+                }
+                // debugger;
 
-        var IpAddressModel = {
-        Id: id,
-        Host: txtHostName,
-        RangeId: "111.111.111",
-        SortOrder: 0
-    }
-        // debugger;
+                if (txtHostName == "") {
 
-        if (txtHostName == "") {
+                    $.ajax({
+                        type: "GET",
+                        url: "../api/ipaddressapi/" + id,
+                        data: JSON.stringify(IpAddressModel),
+                        contentType: "application/json;charset=utf-8",
+                        dataType: "JSON",
+                        success: function (data) {
+                            var ip = data.Id;
+                            var host = data.Host;
+                            $(other).val(host);
+                            if (host != null && host != "") {
+                                //debugger;
+                                $(that).remove();
+                                $(other).trigger('change');
+                            }
+                        },
+                        complete: (function (data) {
+                            var responseText = JSON.parse(data.responseText);
+                            var message = responseText["ExceptionMessage"];
+                            if (message != null && message != "") {
+                                $.blockUI({ css: { backgroundColor: '#f00', color: '#fff' }, message: "<h2>Error: " + message + "!</h2>" });
+                                $.unblockUI({ fadeOut: 3000 });
+                                $(that).val("Reverse DNS*");
+                            }
+                            else {
+                                $.unblockUI();
+                            }
+                        })
+                    });
+                }
+            });
 
-            $.ajax({
-        type: "GET",
-        url: "../api/ipaddressapi/" + id,
-        data: JSON.stringify(IpAddressModel),
-        contentType: "application/json;charset=utf-8",
-        dataType: "JSON",
-        success: function (data) {
-                    var ip = data.Id;
-                    var host = data.Host;
-                    $(other).val(host);
-                    if (host != null && host != "") {
-        //debugger;
-                        $(that).remove();
-                        $(other).trigger('change');
-    }
-    },
-        complete: (function (data) {
+            function contentLoaded() {
 
-                var responseText = JSON.parse(data.responseText);
-                var message = responseText["ExceptionMessage"];
-                if (message != null && message != ""){
-                 $.blockUI({ css: { backgroundColor: '#f00', color: '#fff'}, message: "<h2>Error: " + message + "!</h2>" });
-                 $.unblockUI({fadeOut: 3000});
-    }
-    else {
-    $.unblockUI();
-    }
-    })
-    });
-    }
+                // Add all the button related event listeners:
 
-    });
+            };
+            window.addEventListener("DOMContentLoaded", contentLoaded, false);
 
-    function contentLoaded() {
-
-        // Add all the button related event listeners:
-
-    };
-    window.addEventListener("DOMContentLoaded", contentLoaded, false);
-
-    })();
+        })();
     </script>
 }
 
 <h2>IP Addresses</h2>
+@*This is used with the jquery.blockUI.js plug-in*@
 <div id="domMessage" style="display: none;">
     <h1>We are processing your request.  Please be patient.</h1>
 </div>
+
+@*This is used with the twitter bootstrap-modal.js plug-in
+This seems to be fashioned more towards data entry forms.*@
+<div class="modal hide" id="myModal">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">×</button>
+        <h3>Modal header</h3>
+    </div>
+    <div class="modal-body">
+        <p>One fine body…</p>
+    </div>
+    <div class="modal-footer">
+        <a href="#" class="btn" data-dismiss="modal">Close</a>
+        <a href="#" class="btn btn-primary">Save changes</a>
+    </div>
+</div>
+
 <div class="tabbable">
     <!-- Only required for left/right tabs -->
     <ul class="nav nav-tabs">
