@@ -15,6 +15,7 @@ namespace CAM.Controllers
 {
     /// <summary>
     /// This controller is specifically for handling WebAPI calls.
+    /// I have re-written the app to no longer use this controller, and have left it as an example.
     /// </summary>
     public class IpAddressApiController : ApiController
     {

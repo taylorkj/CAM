@@ -5,152 +5,207 @@
 }
 @section AdditionalScripts
 {
-    <script src='@Url.Script("jquery.blockUI.js")' type="text/javascript"> </script>
-    <script src='@Url.Script("bootstrap-transition.js")' type="text/javascript"> </script>
-    <script src='@Url.Script("bootstrap-modal.js")' type="text/javascript"> </script>
     <script type="text/javascript">
-        //$(document).ajaxStop($.unblockUI);
         (function () {
 
-            function renderButton(textElement, id) {
-                var button = document.createElement("input");
-                button.type = 'button';
-                button.className = 'findHostName btn-mini';
-                button.value = 'Reverse DNS';
-                button.id = 'btnFindHost';
-                $(button).attr('data-id', id);
+            var securityToken = $('input[name="__RequestVerificationToken"]').val();
 
-                textElement.parentElement.appendChild(button);
-            }
+            function renderButton($textElement, id) {
 
-            $('.editHostName').live('change', function () {
-                $.blockUI({ message: '<h2><image src="@Url.Image("wait30trans.gif")" alt="wait image" />&nbsp;Please Standby...</h2>' });
-                var that = $(this)[0];
-                var other = $(this).siblings(":button")[0];
+                // My old way:
+                //var button = document.createElement("input");
+                //button.type = 'button';
+                //button.className = 'findHostName btn btn-mini';
+                //button.value = 'Reverse DNS';
+                //button.id = 'btnFindHost';
+                //$(button).attr('data-id', id);
 
-                var txtHostName = escape($(this).val());
-                var id = $.trim($(this).data('id'));
+                // Another way:
+                //var button = "<input type='button' id='btnFindHost' class='findHostName btn btn-mini' value='Reverse DNS' data-id='" + id + "' />";
 
-                var IpAddressViewModel = {
-                    Id: $.trim($(this).data('id')),
-                    Host: $.trim($(this).val())
-                }
-
-                $.ajax({
-                    //url: "../../api/ipaddresses/?id=" + id + "&host=" + txtHostName,
-                    url: "../api/ipaddressapi/",
-                    data: JSON.stringify(IpAddressViewModel),
-                    type: "Post",
-                    contentType: "application/json;charset=utf-8",
-                    statusCode: {
-
-                        //Web API Post method returns status code as 201
-                        201: function () {
-                            alert("New record added successfully");
-                        },
-                        //Web API Put method returns status code as 200
-                        200: function () {
-
-                            if (txtHostName != null && txtHostName != "") {
-                                $.blockUI({ message: "<h2>Record updated successfully</h2>" });
-                                $.unblockUI({ fadeOut: 2000 });
-                                $(other).remove();
-                            }
-                        },
-                        204: function () {
-                            // record has been cleared and set to null.
-                            renderButton(that, id);
-                            $.blockUI({ message: "<h2>Record updated successfully</h2>" });
-                            $.unblockUI({ fadeOut: 2000 });
-                        }
-                    }
+                // jQuery way using a data map.  Note that I could have also chained attr together, but I think this is more readable.
+                var button = $("<input />").attr({
+                    'type': 'button',
+                    'id': 'btnFindHost',
+                    'class': 'findHostName btn btn-mini',
+                    'value': 'Reverse DNS',
+                    'data-id': id
                 });
 
+                $textElement.siblings("img.waiting").before(button);
+            }
+
+            // This can be changed to a delagate using a context of "ipAddressTable", then the event would only have to bubble up the least number of levels for new items
+            // added to the DOM.
+            //$('.editHostName').live('change', function () {
+            // and revised to use the delegated version of the on function:
+            $('.tab-content').on('change', '.editHostName', function () {
+                var $textBox = $(this);
+                var $button = $textBox.siblings(":button");
+                var $imgWaiting = $textBox.siblings("img.waiting");
+
+                $imgWaiting.attr("style", "display:inline;");
+
+                var txtHostName = escape($textBox.val());
+                var id = $.trim($textBox.data('id'));
+
+                var IpAddressViewModel = {
+                    Id: $.trim($textBox.data('id')),
+                    Host: $.trim($textBox.val()),
+                    __RequestVerificationToken: securityToken
+                }
+
+                // Old ajax call using WebAPI that correctly returns HttpResponseMessage and has direct access to StatusCode.
+                //
+                /*                $.ajax({
+                                    url: '@Url.Action(null,"api/ipaddressapi")',
+                                    data: JSON.stringify(IpAddressViewModel) ,  // Note that the model must be stringifed if using the WebAPI approach.
+                                    type: "Post",
+                                    contentType: "application/json;charset=utf-8",
+                                    statusCode: {
+                                        //Web API Post method returns status code as 201
+                                        201: function () {
+                                            alert("New record added successfully");
+                                        },
+                                        //Web API Put method returns status code as 200
+                                        200: function () {
+                                            $imgWaiting.attr("style", "display:none;");
+                                            if (txtHostName != null && txtHostName != "") {
+                                                $button.remove();
+                                            }
+                                        },
+                                        204: function () {
+                                            // record has been cleared and set to null.
+                                            renderButton($textBox, id);
+                                            $imgWaiting.attr("style", "display:none;");
+                                        }
+                                    }
+                                });
+                                */
+
+                // Note that WebAPI correctly returns HttpResponseMessage with the desired StatusCode, where as ApplicationController wraps the return value in something else
+                // that makes it extreemly difficult to actually get at the responseText object; therefore, I need to change the return type to JsonNetResult and parse the
+                // jqHXR.responseText back into an object to regain access to it.
+                // Also the content type must be changed to $.post's default as opposed to 'json' in order to correctly handle the anti-forgery token; otherwise, it there is
+                // no easy way to get around the anti-forgery token not provided issue.  Much easier and straight forward to use WebAPI in my opinion for situations when you actually
+                // desire an http response object back.
+                $.post('@Url.Action("Post","IpAddress")', IpAddressViewModel, function (data, statusText, jqHXR) {
+                    var jsonResponse = JSON.parse(jqHXR.responseText);
+                    var statusCode = jsonResponse.StatusCode;
+                    if (statusCode == 200) {
+                        $imgWaiting.attr("style", "display:none;");
+                        if (txtHostName != null && txtHostName != "") {
+                            $button.remove();
+                        }
+                    }
+                    else if (statusCode == 204) {
+                            // record has been cleared and set to null.
+                        renderButton($textBox, id);
+                        $imgWaiting.attr("style", "display:none;");
+                    }
+                    else {
+                        alert('Something unexpected happened: ' + statusCode);
+                    }
+                }, 'json');
             });
 
-            $('.findHostName').live('click', function () {
-                $.blockUI({ message: '<h2><image src="@Url.Image("wait30trans.gif")" alt="wait image" />&nbsp;Please Standby...</h2>' });
-                var that = $(this)[0];
-                var other = $(this).siblings(":text")[0];
+            //$('.findHostName').live('click', function () {
+            $('.tab-content').on('click', '.findHostName', function () {
+                var $button = $(this);
+                var $textBox = $button.siblings(":text");
+                var $imgWaiting = $button.siblings("img.waiting");
 
-                var txtHostName = escape($(other).val());
-                var id = $.trim($(this).data('id'));
+                $imgWaiting.attr("style", "display:inline;");
 
-                var IpAddressModel = {
-                    Id: id,
-                    Host: txtHostName,
-                    RangeId: "111.111.111",
-                    SortOrder: 0
-                }
-                // debugger;
+                var txtHostName = escape($textBox.val());
+                var id = $.trim($button.data('id'));
+
+                // When not using WebAPI it is not necessary to pass a data mapped object, but the parameter must be passed in the query string.
+                //var IpAddressModel = {
+                //    Id: id,
+                //    Host: txtHostName
+                //}
 
                 if (txtHostName == "") {
+                    // Old way using the lower-level $.ajax call
+                    //$.ajax({
+                    //    type: "GET",
+                    //    url: "../api/ipaddressapi/" + id,
+                    //    data: JSON.stringify(IpAddressModel),
+                    //    contentType: "application/json;charset=utf-8",
+                    //    dataType: "JSON",
+                    //    success: function (data) {
+                    //        var ip = data.Id;
+                    //        var host = data.Host;
+                    //        $textBox.val(host);
+                    //        if (host != null && host != "") {
+                    //            $button.remove();
+                    //            $textBox.trigger('change');
+                    //        }
+                    //    },
+                    //    complete: (function (data) {
+                    //        var responseText = JSON.parse(data.responseText);
+                    //        var message = responseText["ExceptionMessage"];
+                    //        if (message != null && message != "") {
+                    //            $button.val($button.val() + "*");
+                    //        }
 
-                    $.ajax({
-                        type: "GET",
-                        url: "../api/ipaddressapi/" + id,
-                        data: JSON.stringify(IpAddressModel),
-                        contentType: "application/json;charset=utf-8",
-                        dataType: "JSON",
-                        success: function (data) {
-                            var ip = data.Id;
-                            var host = data.Host;
-                            $(other).val(host);
-                            if (host != null && host != "") {
-                                //debugger;
-                                $(that).remove();
-                                $(other).trigger('change');
-                            }
-                        },
-                        complete: (function (data) {
-                            var responseText = JSON.parse(data.responseText);
-                            var message = responseText["ExceptionMessage"];
+                    //        $imgWaiting.attr("style", "display:none;");
+                    //    })
+                    //});
+
+                    // Sample of using $.getJSON instead of lower-level ajax call (see above):
+                    //@*                    $.getJSON('@Url.Action(null, "api/ipaddressapi/")' + id, JSON.stringify(IpAddressModel), function (data) {
+                    //                        var ip = data.Id;
+                    //                        var host = data.Host;
+                    //                        $textBox.val(host);
+                    //                        if (host != null && host != "") {
+                    //                            $button.remove();
+                    //                            $textBox.trigger('change');
+                    //                        }
+                    //                        else {
+                    //                            var message = data.ExceptionMessage;
+                    //                            if (message != null && message != "") {
+                    //                                $button.val($button.val() + "*");
+                    //                            }
+
+                    //                            $imgWaiting.attr("style", "display:none;");
+                    //                        }
+                    //                    });*@
+
+                    // When not using WebAPI it is not necessary to pass a data mapped object, so it is set to null in the following method, and the
+                    // id is passed in the query string.  Actually, I was not able to get the mapping from data object to MVC input parameter to work
+                    // correctly once I revised it to use a standard MVC controller vs. a WebAPI controller, where as before, I only needed to pass the object,
+                    // not append anything to the query string to get things to map properly.
+                    $.getJSON('@Url.Action("Get","IpAddress")' + "/" + id, null, function (data) {
+                        var ip = data.Id;
+                        var host = data.Host;
+                        $textBox.val(host);
+                        if (host != null && host != "") {
+                            $button.remove();
+                            $textBox.trigger('change');
+                        }
+                        else {
+                            var message = data.ExceptionMessage;
                             if (message != null && message != "") {
-                                $.blockUI({ css: { backgroundColor: '#f00', color: '#fff' }, message: "<h2>Error: " + message + "!</h2>" });
-                                $.unblockUI({ fadeOut: 3000 });
-                                $(that).val("Reverse DNS*");
+                                $button.val("Reverse DNS" + "*");
                             }
-                            else {
-                                $.unblockUI();
-                            }
-                        })
+
+                            $imgWaiting.attr("style", "display:none;");
+                        }
                     });
                 }
+                else {
+                    // leave the host name as-is, and turn off the waiting image:
+                    $imgWaiting.attr("style", "display:none;");
+                }
             });
-
-            function contentLoaded() {
-
-                // Add all the button related event listeners:
-
-            };
-            window.addEventListener("DOMContentLoaded", contentLoaded, false);
 
         })();
     </script>
 }
-
+@Html.AntiForgeryToken()
 <h2>IP Addresses</h2>
-@*This is used with the jquery.blockUI.js plug-in*@
-<div id="domMessage" style="display: none;">
-    <h1>We are processing your request.  Please be patient.</h1>
-</div>
-
-@*This is used with the twitter bootstrap-modal.js plug-in
-This seems to be fashioned more towards data entry forms.*@
-<div class="modal hide" id="myModal">
-    <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal">×</button>
-        <h3>Modal header</h3>
-    </div>
-    <div class="modal-body">
-        <p>One fine body…</p>
-    </div>
-    <div class="modal-footer">
-        <a href="#" class="btn" data-dismiss="modal">Close</a>
-        <a href="#" class="btn btn-primary">Save changes</a>
-    </div>
-</div>
-
 <div class="tabbable">
     <!-- Only required for left/right tabs -->
     <ul class="nav nav-tabs">
@@ -168,24 +223,31 @@ This seems to be fashioned more towards data entry forms.*@
     <div class="tab-content">
         @{
             i = 1;
+
             foreach (var r in Model.IpAddressRanges.OrderBy(r => r.TabOrder))
             {
                 var tabIdString = "tab" + i;
                 var tabPaneClass = (r.TabOrder == 1 ? "tab-pane active" : "tab-pane");
             <div class="@tabPaneClass" id="@tabIdString">
-                <table class="table table-striped">
+                <table class="table table-striped table-condensed">
                     <tr>
                         <th>IP Address</th>
                         <th>Host Name</th>
                         <th>DNS Name(s)</th>
                     </tr>
+
                     @foreach (var ip in r.IpAddresses)
                     {
+
                         <tr>
                             <td>@ip.Id</td>
                             <td>
-                                <input type="text" value="@ip.Host" id="txtHostName" name="hostName" class="editHostName" data-id="@ip.Id" />@if (@ip.Host == null || @ip.Host == "")
-                                                                                                                                             { <input type="button" class="findHostName btn-mini" value="Reverse DNS" id="btnFindHost" data-id="@ip.Id" /> }
+                                <input type="text" value="@ip.Host" id='@("hostName" + @ip.SortOrder)' name="hostName" class="editHostName input-medium" data-id="@ip.Id" />
+                                @if (@ip.Host == null || @ip.Host == "")
+                                {
+                                    <input type="button" class="findHostName btn btn-mini" value="Reverse DNS" id="btnFindHost" data-id="@ip.Id" />
+                                }
+                                <img src='@Url.Image("wait30trans.gif")' style="display: none;" alt="processing" class="waiting"/>
                             </td>
                             <td>
                                 <ul class="unstyled">

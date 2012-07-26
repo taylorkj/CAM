@@ -4,6 +4,9 @@ using CAM.Core.Repositories;
 
 namespace CAM.Models
 {
+    /// <summary>
+    /// This view model is used with the IpAddress -> Index view.
+    /// </summary>
     public class IpAddressViewModel
     {
         #region WebAPI_variables
